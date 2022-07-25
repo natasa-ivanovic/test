@@ -21,77 +21,101 @@ jobs:
           fetch-depth: 0
       - run: git checkout HEAD^
 
-      - name: Create a Github Release
-        uses: rymndhng/release-on-push-action@master
+      - name: Bump Version and Push Tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create a GitHub Release
+        uses: ncipollo/release-action@v1.9.0
         with:
-          bump_version_scheme: minor
-          tag_prefix: v
-          release_name: "Release <RELEASE_VERSION>"
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body:
+            ${{ steps.github_release.outputs.changelog }}
+            ${{ steps.tag_version.outputs.changelog }}
 
-      - name: Cache Maven Packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+      - name: Print tag
+        run: echo ${{ steps.tag_version.outputs.new_tag }} ${{ steps.tag_version.outputs }} ${{ steps.tag_version }}
 
-      - name: Build with Maven
-        run: mvn package
+#      - name: Create a Github Release
+#        uses: rymndhng/release-on-push-action@master
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          bump_version_scheme: minor
+#          tag_prefix: v
+#          release_name: "Release <RELEASE_VERSION>"
 
-      - name: Semantic Versioning
-        id: versioning
-        uses: paulhatch/semantic-version@v4.0.2
-        with:
-          tag_prefix: "v"
-          major_pattern: "(MAJOR)"
-          minor_pattern: "(MINOR)"
-          format: "${major}.${minor}.${patch}"
-          bump_each_commit: true
+#      - name: Cache Maven Packages
+#        uses: actions/cache@v1
+#        with:
+#          path: ~/.m2
+#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: ${{ runner.os }}-m2
+#
+#      - name: Build with Maven
+#        run: mvn package
 
-      - name: Upload Jar Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-${{ steps.versioning.outputs.version }}.jar
-          path: target/*.jar
+#      - name: Semantic Versioning
+#        id: versioning
+#        uses: paulhatch/semantic-version@v4.0.2
+#        with:
+#          tag_prefix: "v"
+#          major_pattern: "(MAJOR)"
+#          minor_pattern: "(MINOR)"
+#          format: "${major}.${minor}.${patch}"
+#          bump_each_commit: true
 
-      - name: Set Up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set Up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Docker Login
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Docker build
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: false
-          secrets: |
-            GIT_AUTH_TOKEN = ${{ secrets.GITHUB_TOKEN }}
-          builder: ${{ steps.buildx.outputs.name }}
-          tags: ${{ secrets.DOCKER_USERNAME }}/new-test:${{ steps.versioning.outputs.version }}
-          load: true
-
-      - name: Docker push
-        id: docker_push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          secrets: |
-            GIT_AUTH_TOKEN = ${{ secrets.GITHUB_TOKEN }}
-          tags: ${{ secrets.DOCKER_USERNAME }}/new-test:${{ steps.versioning.outputs.version }}
-
-      - name: Upload image
-        uses: ishworkh/docker-image-artifact-upload@v1
-        with:
-          image: ${{ secrets.DOCKER_USERNAME }}/new-test:${{ steps.versioning.outputs.version }}
+#      - name: Upload Jar Artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: build-${{ steps.versioning.outputs.version }}.jar
+#          path: target/*.jar
+#
+#      - name: Set Up QEMU
+#        uses: docker/setup-qemu-action@v2
+#
+#      - name: Set Up Docker Buildx
+#        id: buildx
+#        uses: docker/setup-buildx-action@v2
+#
+#      - name: Docker Login
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Docker build
+#        id: docker_build
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: .
+#          push: false
+#          secrets: |
+#            GIT_AUTH_TOKEN = ${{ secrets.GITHUB_TOKEN }}
+#          builder: ${{ steps.buildx.outputs.name }}
+#          tags: ${{ secrets.DOCKER_USERNAME }}/new-test:${{ steps.versioning.outputs.version }}
+#          load: true
+#
+#      - name: Docker push
+#        id: docker_push
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: .
+#          push: true
+#          secrets: |
+#            GIT_AUTH_TOKEN = ${{ secrets.GITHUB_TOKEN }}
+#          tags: ${{ secrets.DOCKER_USERNAME }}/new-test:${{ steps.versioning.outputs.version }}
+#
+#      - name: Upload image
+#        uses: ishworkh/docker-image-artifact-upload@v1
+#        with:
+#          image: ${{ secrets.DOCKER_USERNAME }}/new-test:${{ steps.versioning.outputs.version }}
