@@ -36,6 +36,15 @@ jobs:
           echo "Got tag name ${{ steps.release.outputs.tag_name }}"
           echo "Got release version ${{ steps.release.outputs.version }}"
 
+      - name: Split version
+        id: clean_version
+        uses: jungwinter/split@v2
+        with:
+          msg: ${{steps.release.outputs.version}}
+
+      - name: Print clear version
+        run: echo "Clear version ${{ steps.clean_version.outputs._1 }}"
+
 #      - name: Cache Maven Packages
 #        uses: actions/cache@v1
 #        with:
