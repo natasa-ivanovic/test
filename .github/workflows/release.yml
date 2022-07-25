@@ -22,6 +22,7 @@ jobs:
       - run: git checkout HEAD^
 
       - name: Create a Github Release
+        id: release
         uses: rymndhng/release-on-push-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
