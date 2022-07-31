@@ -1,3 +1,3 @@
 FROM adoptopenjdk:11-jre-hotspot
-COPY "target/application.jar" application.jar
-ENTRYPOINT ["java", "-jar", "application.jar"]
+COPY "target/application-test.jar" application-test.jar
+ENTRYPOINT ["java", "-jar", "application-test.jar"]

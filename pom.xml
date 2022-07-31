@@ -50,7 +50,7 @@
 <!--		</dependencies>-->
 <!--	</dependencyManagement>-->
 	<build>
-		<finalName>application</finalName>
+		<finalName>application-test</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

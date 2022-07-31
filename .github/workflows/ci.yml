@@ -11,8 +11,6 @@ on:
         required: true
       DOCKER_PASSWORD:
         required: true
-#      SONAR_TOKEN:
-#        required: true
 
 jobs:
   ci:
@@ -27,6 +25,9 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: '11'
+
+      - name: Commit Lint
+        uses: wagoid/commitlint-github-action@v4
 
       - name: Cache Maven Packages
         uses: actions/cache@v1
